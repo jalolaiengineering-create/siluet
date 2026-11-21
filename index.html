@@ -750,6 +750,19 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
 @keyframes fabPingGold{0%{box-shadow:0 0 0 0 rgba(212,175,90,.55)}70%,100%{box-shadow:0 0 0 16px rgba(212,175,90,0)}}
 .fab-menu .c-btn{background:rgba(250,245,234,.96);box-shadow:inset 0 0 0 1px var(--hair),0 16px 34px -14px rgba(60,44,10,.45)}
 a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline-color:#B08A2E}
+
+/* Phones and touch screens: no live blur behind moving parts, no constant repaints */
+@media (max-width: 899px), (hover: none), (pointer: coarse){
+  :root{--glass-1:rgba(255,250,238,.94); --glass-2:rgba(250,242,224,.88)}
+  .glass,.orbit .orb,.bubble,.ribbon,.fab-menu .c-btn,.cf-chip,.btn--glass{-webkit-backdrop-filter:none;backdrop-filter:none}
+  .ribbon{background:rgba(243,236,221,.98)}
+  .fab-menu .c-btn{background:#FAF5EA}
+  .halo{animation:none;filter:blur(34px);opacity:.4}
+  .bubble{display:none}
+  .cf-card{filter:none!important;transition:transform .55s cubic-bezier(.2,.7,.2,1),opacity .55s ease;will-change:auto}
+  .cf-echo::before{filter:none}
+  .glare{display:none}
+}
 </style>
 </head>
 <body>
@@ -1336,8 +1349,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
     }
   }
 
-  // Logo: gently settles back as the page scrolls
-  if (stage && !reduce) {
+  // Logo: gently settles back as the page scrolls (mouse devices only)
+  if (stage && !reduce && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
     var ticking = false;
     window.addEventListener('scroll', function () {
       if (ticking) return;
@@ -1531,7 +1544,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
       entries.forEach(function (en) {
         if (en.isIntersecting) { en.target.classList.add('in'); ro.unobserve(en.target); }
       });
-    }, { rootMargin: '0px 0px -8% 0px' });
+    }, { rootMargin: '0px 0px 20% 0px' });
     document.querySelectorAll('[data-reveal]').forEach(function (el) { ro.observe(el); });
   }
 
@@ -1609,7 +1622,9 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
 
   // Sheets: every section is a page that slides over the previous one; the covered page recedes and dims
   var sheetEls = [document.getElementById('top')].concat(Array.prototype.slice.call(document.querySelectorAll('main > section')));
-  if (!reduce && sheetEls[0] && sheetEls.length > 1) {
+  // Desktop only: on phones the scroll-driven page transforms lag the finger and flicker
+  var desktopPointer = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)').matches;
+  if (!reduce && desktopPointer && sheetEls[0] && sheetEls.length > 1) {
     var rootEl = document.documentElement, ribbonEl = document.querySelector('.ribbon');
     var rH = 0, vh = 0, stickTops = [], heights = [], staticTops = [], sheetTick = false;
     var clamp01 = function (v) { return v < 0 ? 0 : (v > 1 ? 1 : v); };
